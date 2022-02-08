@@ -6,6 +6,8 @@ title: >-
   Codes for: Atmospheric temperature, water vapour
   and liquid water path from two microwave
   radiometers during MOSAiC
+version: v1.0.0
+doi: https://doi.org/10.5281/zenodo.6009333
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
