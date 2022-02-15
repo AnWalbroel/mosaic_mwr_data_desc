@@ -598,26 +598,26 @@ if plot_T_and_q_std_bias: # standard deviation and bias profiles (as subplots):
 
 
 		# bias profiles:
-		ax_bias.plot(BIAS_temp_hatson_mos_mean, height_hatpro, color=(0,0,0), linewidth=3.0, label="zenith scan")
-		ax_bias.plot(BIAS_temp_hatson_bl_mos_mean, height_hatpro, color=(0,0,0), linestyle='dashed', linewidth=2.5, label='elevation scan')
+		ax_bias.plot(BIAS_temp_hatson_mos_mean, height_hatpro, color=(0,0,0), linewidth=3.0, label="zenith mode")
+		ax_bias.plot(BIAS_temp_hatson_bl_mos_mean, height_hatpro, color=(0,0,0), linestyle='dashed', linewidth=2.5, label='BL mode')
 		ax_bias.plot(np.full_like(height_hatpro, 0.0), height_hatpro, color=(0,0,0), linewidth=1.0)
 		ax_bias.fill_betweenx(height_hatpro, BIAS_temp_hatson_mos_mean - BIAS_temp_hatson_mos_std, 
 						BIAS_temp_hatson_mos_mean + BIAS_temp_hatson_mos_std, facecolor=(0.2,0.2,0.8,0.5),
-						linewidth=3.5, label="zenith scan")
+						linewidth=3.5, label="zenith mode")
 		ax_bias.fill_betweenx(height_hatpro, BIAS_temp_hatson_bl_mos_mean - BIAS_temp_hatson_bl_mos_std, 
 						BIAS_temp_hatson_bl_mos_mean + BIAS_temp_hatson_bl_mos_std, facecolor=(0.26,0.26,0.26,0.4),
-						linewidth=2.2, label="elevation scan")
+						linewidth=2.2, label="BL mode")
 
 
 		# std dev profiles:
-		ax_std.plot(STDDEV_temp_hatson_mos_mean, height_hatpro, color=(0,0,0), linewidth=3.0, label="zenith scan")
-		ax_std.plot(STDDEV_temp_hatson_bl_mos_mean, height_hatpro, color=(0,0,0), linestyle='dashed', linewidth=2.5, label='elevation scan')
+		ax_std.plot(STDDEV_temp_hatson_mos_mean, height_hatpro, color=(0,0,0), linewidth=3.0, label="zenith mode")
+		ax_std.plot(STDDEV_temp_hatson_bl_mos_mean, height_hatpro, color=(0,0,0), linestyle='dashed', linewidth=2.5, label='BL mode')
 		ax_std.fill_betweenx(height_hatpro, STDDEV_temp_hatson_mos_mean - STDDEV_temp_hatson_mos_std, 
 						STDDEV_temp_hatson_mos_mean + STDDEV_temp_hatson_mos_std, facecolor=(0.2,0.2,0.8,0.5),
-						linewidth=3.5, label="zenith scan")
+						linewidth=3.5, label="zenith mode")
 		ax_std.fill_betweenx(height_hatpro, STDDEV_temp_hatson_bl_mos_mean - STDDEV_temp_hatson_bl_mos_std, 
 						STDDEV_temp_hatson_bl_mos_mean + STDDEV_temp_hatson_bl_mos_std, facecolor=(0.26,0.26,0.26,0.4),
-						linewidth=2.2, label="elevation scan")
+						linewidth=2.2, label="BL mode")
 
 
 		# add figure identifier of subplots: a), b), ...
