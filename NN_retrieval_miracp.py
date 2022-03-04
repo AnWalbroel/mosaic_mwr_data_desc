@@ -11,7 +11,7 @@ import sys
 from matplotlib.ticker import PercentFormatter
 from import_data import import_mirac_MET_RPG_daterange, import_PS_mastertrack, import_mirac_level1b_daterange
 from my_classes import radiosondes, radiometers, era_i
-from data_tools import compute_retrieval_statistics, compute_DOY, select_MWR_channels, outliers_per_eye, datetime_to_epochtime
+from data_tools import compute_retrieval_statistics, compute_DOY, select_MWR_channels, datetime_to_epochtime
 
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
@@ -768,17 +768,17 @@ def scatterplot_comparison_syn(prediction, predictand_test, aux_info, save_figur
 	stats_dict_top = compute_retrieval_statistics(x_stuff_top, y_stuff_top, compute_stddev=True)
 
 	error_dict = {	'rmse_tot': sc_rmse,
-					'rmse_bot': np.sqrt(np.nanmean((x_stuff[mask_bot] - y_stuff[mask_bot])**2)),
-					'rmse_mid': np.sqrt(np.nanmean((x_stuff[mask_mid] - y_stuff[mask_mid])**2)),
-					'rmse_top': np.sqrt(np.nanmean((x_stuff[mask_top] - y_stuff[mask_top])**2)),
+					'rmse_bot': stats_dict_bot['rmse'],
+					'rmse_mid': stats_dict_mid['rmse'],
+					'rmse_top': stats_dict_top['rmse'],
 					'stddev': 	stats_dict['stddev'],
 					'stddev_bot': 	stats_dict_bot['stddev'],
 					'stddev_mid': 	stats_dict_mid['stddev'],
 					'stddev_top': 	stats_dict_top['stddev'],
 					'bias_tot': sc_bias,
-					'bias_bot': np.nanmean(y_stuff[mask_bot] - x_stuff[mask_bot]),
-					'bias_mid': np.nanmean(y_stuff[mask_mid] - x_stuff[mask_mid]),
-					'bias_top': np.nanmean(y_stuff[mask_top] - x_stuff[mask_top])}
+					'bias_bot': stats_dict_bot['bias'],
+					'bias_mid': stats_dict_mid['bias'],
+					'bias_top': stats_dict_top['bias']}
 
 
 	# ------------------------------------- #
