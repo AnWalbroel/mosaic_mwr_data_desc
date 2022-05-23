@@ -30,8 +30,8 @@ elif (len(sys.argv) == 2) and (sys.argv[1] not in ["fig1", "fig2", "fig3"]):
 					"'python3 plot_mwr_level_2a_radiosonde.py " + '"fig3"' + "'.")
 
 # Paths:
-path_hatpro_level2 = "/data/obs/campaigns/mosaic/hatpro/l2/"				# path of hatpro derived products
-path_mirac = "/data/obs/campaigns/mosaic/mirac-p/l2/"						# path of mirac-p derived products
+path_hatpro_level2 = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/outside_eez/HATPRO_l2_v01/"	# path of hatpro derived products
+path_mirac = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/outside_eez/MiRAC-P_l2_v01/"						# path of mirac-p derived products
 path_radiosondes = {'level_2': "/data/radiosondes/Polarstern/PS122_MOSAiC_upper_air_soundings/Level_2/",	# path of MOSAiC radiosondes (as nc)
 					'mossonde': "/data/radiosondes/Polarstern/PS122_MOSAiC_upper_air_soundings/",
 					'psYYMMDDwHH': "/data/testbed/datasets/MOSAiC/rs41/"}
@@ -75,8 +75,8 @@ plot_IWV_scatterplots_calib = False			# scatterplots of IWV: HATPRO vs. sonde; M
 plot_IWV_scatterplots_legs = False			# scatterplots of IWV: HATPRO vs. sonde; MiRAC-P vs. sonde on MOSAiC legs
 plot_IWV_mwrson_diff_histogram = False		# histogram of IWV difference (MWR - sonde)
 rm_window = 300					# in seconds! default: 300
-save_figures = True
-save_figures_eps = False		# save figures as vector graphics (pdf or eps)
+save_figures = False
+save_figures_eps = True		# save figures as vector graphics (pdf or eps)
 skip_pre_calib = False			# if True, periods before first decent calibration is skipped; MAY ONLY BE TRUE if plot_IWV_scatterplots_calib = True !!!
 scatplot_fix_axlims = True		# if True, axis limits will be hardcoded to [0, 35] or depend on MOSAiC leg; if False: axis limits
 								# depend on max value of the scatterplot (recommended: True)
@@ -209,15 +209,23 @@ if (plot_option < 3) or (plot_option == 6) or (not all_precomputed_files_exist):
 
 	# import sonde and hatpro level 2a data and mirac IWV data:
 	# and create a datetime variable for plotting and apply running mean, if specified:
-	hatpro_dict = import_hatpro_level2a_daterange(path_hatpro_level2, date_start, date_end, 
-												which_retrieval=which_retrievals, minute_avg=False, verbose=1)
+	# import_hatpro_level2a_daterange is for the data structure separated into daily folders:
+	# hatpro_dict = import_hatpro_level2a_daterange(path_hatpro_level2, date_start, date_end, 
+												# which_retrieval=which_retrievals, minute_avg=False, verbose=1)
+	print("Loading HATPRO Level 2a....")
+	hatpro_dict = import_hatpro_level2a_daterange_pangaea(path_hatpro_level2, date_start, date_end, 
+														which_retrieval=which_retrievals)
 	instrument_status['hatpro'] = 1
 
 	# load MiRAC-P IWV values:
 	if which_retrievals in ['iwv', 'prw', 'both']:
-		mirac_dict = import_mirac_level2a_daterange(path_mirac, date_start, date_end, which_retrieval=which_retrievals, 
-													vers=mirac_version, minute_avg=False, verbose=1)
+		# mirac_dict = import_mirac_level2a_daterange(path_mirac, date_start, date_end, which_retrieval=which_retrievals, 
+													# vers=mirac_version, minute_avg=False, verbose=1)
+		print("Loading MiRAC-P Level 2a....")
+		mirac_dict = import_mirac_level2a_daterange_pangaea(path_mirac, date_start, date_end, 
+														which_retrieval=which_retrievals)
 		instrument_status['mirac'] = 1
+		mirac_dict['clwvi'] = np.full(mirac_dict['prw'].shape, np.nan)
 	else:
 		mirac_dict = {'time': np.array([]), 'flag': np.array([]), 'clwvi': np.array([])}
 		# status stays 0
@@ -1456,9 +1464,11 @@ if plot_IWV_scatterplots_all:
 
 	# Legends:
 	leg_handles, leg_labels = ax1.get_legend_handles_labels()
-	ax1.legend(handles=leg_handles, labels=leg_labels, loc='upper center', bbox_to_anchor=(0.5, 1.00), fontsize=fs)
+	ax1.legend(handles=leg_handles, labels=leg_labels, loc='upper center', bbox_to_anchor=(0.5, 1.00), fontsize=fs,
+				framealpha=0.5)
 	leg_handles, leg_labels = ax2.get_legend_handles_labels()
-	ax2.legend(handles=leg_handles, labels=leg_labels, loc='upper center', bbox_to_anchor=(0.5, 1.00), fontsize=fs)
+	ax2.legend(handles=leg_handles, labels=leg_labels, loc='upper center', bbox_to_anchor=(0.5, 1.00), fontsize=fs,
+				framealpha=0.5)
 
 
 	# set axis limits:
@@ -1862,6 +1872,21 @@ if plot_LWP_IWV_time_series_daily_avg and plot_option == 6:
 								dims=['time'])
 	hatpro_prw = hatpro_prw.resample(time="1D").mean()
 
+	"""
+	# seasonal mean and std of daily LWP:
+	hatpro_clwvi_daily.groupby("time.season").mean()
+	hatpro_clwvi_daily.groupby("time.season").std()
+
+	# # the computation below yields the same as above
+	# hatpro_clwvi_daily_time_dt = numpydatetime64_to_datetime(hatpro_clwvi_daily.time.values)
+	# DJF_idx = [iii for iii, time_dtt in enumerate(hatpro_clwvi_daily_time_dt) if time_dtt.month in [12,1,2]]
+	# SON_idx = [iii for iii, time_dtt in enumerate(hatpro_clwvi_daily_time_dt) if time_dtt.month in [9,10,11]]
+	# JJA_idx = [iii for iii, time_dtt in enumerate(hatpro_clwvi_daily_time_dt) if time_dtt.month in [6,7,8]]
+	# MAM_idx = [iii for iii, time_dtt in enumerate(hatpro_clwvi_daily_time_dt) if time_dtt.month in [3,4,5]]
+
+	# hatpro_clwvi_daily.values[DJF_idx].mean(), ... 
+	"""
+
 	# LWP time series of daily averages of HATPRO
 	fig1 = plt.figure(figsize=(16,8))
 	ax1 = plt.axes()
@@ -1995,3 +2020,4 @@ if plot_LWP_IWV_time_series_daily_avg and plot_option == 6:
 
 	else:
 		plt.show()
+

@@ -21,7 +21,7 @@ mpl.rcParams['agg.path.chunksize'] = 100000		# to avoid a bug with OverflowError
 
 
 # Paths:
-path_hatpro_level2 = "/data/obs/campaigns/mosaic/hatpro/l2/"				# hatpro derived products
+path_hatpro_level2 = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/outside_eez/HATPRO_l2_v01/"			# hatpro derived products
 path_radiosondes = {'level_2': "/data/radiosondes/Polarstern/PS122_MOSAiC_upper_air_soundings/Level_2/",	# MOSAiC radiosondes (as nc)
 					'mossonde': "/data/radiosondes/Polarstern/PS122_MOSAiC_upper_air_soundings/",
 					'psYYMMDDwHH': "/data/testbed/datasets/MOSAiC/rs41/"}
@@ -45,8 +45,8 @@ considered_period = 'mosaic'		# specify which period shall be plotted or compute
 plot_T_and_q_prof_stats = False
 plot_T_and_q_std_bias = True			# standard deviation and bias profile plots
 plot_T_and_q_prof_stats_legs = False		# plot_T_and_q_prof_stats mean and stddev (latter as shading) over all 5 MOSAiC legs
-save_figures = True
-save_figures_eps = False			# save figures as vector graphics (pdf or eps)
+save_figures = False
+save_figures_eps = True			# save figures as vector graphics (pdf or eps)
 with_titles = False				# if True, plots will have titles (False for publication plots)
 rel_q_std_bias_plot_alternative = False			# plots an alternative relative bias and std dev profile; plot_T_and_q_std_bias must be True
 which_retrievals = 'both'		# which data is to be imported: 'both' contains both profiles (Temperature and humidity)
@@ -87,13 +87,14 @@ instrument_status = {'hatpro': 0,			# if 0, HATPRO data not included, if 1, HATP
 
 # import sonde and hatpro level 2b data:
 # and create a datetime variable for plotting.
-hatpro_dict = import_hatpro_level2b_daterange(path_hatpro_level2, date_start, date_end, 
+hatpro_dict = import_hatpro_level2b_daterange_pangaea(path_hatpro_level2, date_start, date_end, 
 											which_retrieval=which_retrievals, around_radiosondes=True,
 											path_radiosondes=path_radiosondes, s_version=radiosonde_version,
 											mwr_avg=900, verbose=1)
+
 instrument_status['hatpro'] = 1
 if which_retrievals in ['ta', 'both']:	# boundary layer scan additionally loaded if temperature profiles are asked
-	hatpro_bl_dict = import_hatpro_level2c_daterange(path_hatpro_level2, date_start, date_end, 
+	hatpro_bl_dict = import_hatpro_level2c_daterange_pangaea(path_hatpro_level2, date_start, date_end, 
 											which_retrieval=which_retrievals, around_radiosondes=True,
 											path_radiosondes=path_radiosondes, verbose=1)
 
@@ -793,12 +794,12 @@ if plot_T_and_q_std_bias: # standard deviation and bias profiles (as subplots):
 		ax2.set_ylim(bottom=y_lims[0], top=y_lims[1])
 
 		# labels:
-		ax_bias.set_xlabel("$\\rho_{v,\mathrm{HATPRO}} - \\rho_{v,\mathrm{Radiosonde}}$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs)
+		ax_bias.set_xlabel("$\\rho_{v,\mathrm{HATPRO}} - \\rho_{v,\mathrm{Radiosonde}}$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs, color=(0.2,0.2,0.8,0.75))
 		ax2_bias.set_xlabel("$\\left( \\rho_{v,\mathrm{HATPRO}} - \\rho_{v,\mathrm{Radiosonde}} \\right)$ / $\overline{\\rho}_{v,\mathrm{Radiosonde}}$ ($\%$)", 
-							fontsize=fs, labelpad=15)
+							fontsize=fs, labelpad=15, color=(0.26,0.26,0.26,0.65))
 		ax_bias.set_ylabel("Height (m)", fontsize=fs)
-		ax_std.set_xlabel("$\sigma_{\\rho_{v}}$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs)
-		ax2.set_xlabel("$\sigma_{\\rho_{v}}$ / $\overline{\\rho}_{v,\mathrm{Radiosonde}}$ ($\%$)", fontsize=fs, labelpad=15)
+		ax_std.set_xlabel("$\sigma_{\\rho_{v}}$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs, color=(0.2,0.2,0.8,0.75))
+		ax2.set_xlabel("$\sigma_{\\rho_{v}}$ / $\overline{\\rho}_{v,\mathrm{Radiosonde}}$ ($\%$)", fontsize=fs, labelpad=15, color=(0.26,0.26,0.26,0.65))
 		if with_titles:
 			ax_std.set_title("Humidity profile standard deviation ($\sigma_{\\rho_v}$)\nbetween HATPRO and radiosondes (RS)",
 						fontsize=fs, pad=15)
@@ -813,11 +814,13 @@ if plot_T_and_q_std_bias: # standard deviation and bias profiles (as subplots):
 
 		# tick_params:
 		ax_bias.tick_params(axis='both', labelsize=fs-2)
-		ax_bias.tick_params(axis='x', pad=7)
+		ax_bias.tick_params(axis='x', pad=7, labelcolor=(0.2,0.2,0.8,0.75))
 		ax_std.tick_params(axis='both', labelsize=fs-2)
-		ax_std.tick_params(axis='x', pad=7)
+		ax_std.tick_params(axis='x', pad=7, labelcolor=(0.2,0.2,0.8,0.75))
 		ax2.tick_params(axis='both', labelsize=fs-2)
+		ax2.tick_params(axis='x', labelcolor=(0.26,0.26,0.26,0.65))
 		ax2_bias.tick_params(axis='both', labelsize=fs-2)
+		ax2_bias.tick_params(axis='x', labelcolor=(0.26,0.26,0.26,0.65))
 		ax_std.yaxis.set_ticklabels([])
 
 		# limit axis spacing:
