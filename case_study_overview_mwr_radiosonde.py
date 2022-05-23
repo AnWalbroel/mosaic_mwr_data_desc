@@ -162,8 +162,8 @@ path_mirac = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/outside_eez/MiRAC-P_l2
 path_plots = "/net/blanc/awalbroe/Plots/figures_data_paper/"			# output of plots
 
 
-save_figures = True		# if true, figures will be saved to file
-save_figures_eps = False		# if true, figures will be saved to a vector graphics file
+save_figures = False				# if true, figures will be saved to file
+save_figures_eps = True		# if true, figures will be saved to a vector graphics file
 with_titles = False		# if True, plots will have titles (False for publication plots)
 considered_period = 'moist_air_intrusion'
 radiosonde_version = 'level_2'
@@ -246,11 +246,13 @@ ok_idx = np.where((MIRAC_DS_prw.flag.values == 0) | (np.isnan(MIRAC_DS_prw.flag.
 MIRAC_DS_prw = MIRAC_DS_prw.isel(time=ok_idx)
 
 
-# DOWNSAMPLING: For example: every 15th value
-# HATPRO_DS_prw = HATPRO_DS_prw.isel(time=range(0,len(HATPRO_DS_prw.time.values),15))
-# HATPRO_DS_hua = HATPRO_DS_hua.isel(time=range(0,len(HATPRO_DS_hua.time.values),15))
-# HATPRO_DS_ta = HATPRO_DS_ta.isel(time=range(0,len(HATPRO_DS_ta.time.values),15))
-# MIRAC_DS_prw = MIRAC_DS_prw.isel(time=range(0,len(MIRAC_DS_prw.time.values),15))
+# DOWNSAMPLING: For example: to minute averages:
+HATPRO_DS_ta = HATPRO_DS_ta.resample(time='60s').mean()
+ok_idx = np.where(~np.isnan(HATPRO_DS_ta.ta.values[:,0]))[0]
+HATPRO_DS_ta = HATPRO_DS_ta.isel(time=ok_idx)
+HATPRO_DS_hua = HATPRO_DS_hua.resample(time='60s').mean()
+ok_idx = np.where(~np.isnan(HATPRO_DS_hua.hua.values[:,0]))[0]
+HATPRO_DS_hua = HATPRO_DS_hua.isel(time=ok_idx)
 
 
 # Plot:
@@ -346,13 +348,13 @@ temp_hat_bl_curtain = ax_ta_bl_hat.contourf(yv, xv, HATPRO_DS_ta_bl.ta.values, l
 
 # add figure identifier of subplots: a), b), ...
 ax_iwv.text(0.02, 0.95, "a)", fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_iwv.transAxes)
-ax_hua_rs.text(0.02, 0.95, "b)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', 
+ax_hua_rs.text(0.02, 0.95, "b) Radiosonde", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', 
 				transform=ax_hua_rs.transAxes)
-ax_hua_hat.text(0.02, 0.95, "c)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', 
+ax_hua_hat.text(0.02, 0.95, "c) HATPRO", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', 
 				transform=ax_hua_hat.transAxes)
-ax_ta_rs.text(0.02, 0.95, "d)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_rs.transAxes)
-ax_ta_hat.text(0.02, 0.95, "e)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_hat.transAxes)
-ax_ta_bl_hat.text(0.02, 0.95, "f)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_bl_hat.transAxes)
+ax_ta_rs.text(0.02, 0.95, "d) Radiosonde", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_rs.transAxes)
+ax_ta_hat.text(0.02, 0.95, "e) HATPRO (zenith mode)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_hat.transAxes)
+ax_ta_bl_hat.text(0.02, 0.95, "f) HATPRO (BL mode)", color=(1,1,1), fontsize=fs, fontweight='bold', ha='left', va='top', transform=ax_ta_bl_hat.transAxes)
 
 
 # legends and colorbars:
@@ -360,28 +362,28 @@ lh, ll = ax_iwv.get_legend_handles_labels()
 ax_iwv.legend(handles=lh, labels=ll, loc='upper right', fontsize=fs_small,
 				framealpha=1.0, markerscale=1.5)
 
-cb_hua_rs = fig1.colorbar(mappable=rho_v_rs_curtain, ax=ax_hua_rs, use_gridspec=False,
-							extend='max', orientation='vertical', fraction=0.095, pad=0)
+cb_hua_rs = fig1.colorbar(mappable=rho_v_rs_curtain, ax=ax_hua_rs, use_gridspec=True,
+							extend='max', orientation='vertical', fraction=0.09, pad=0.01, shrink=0.9)
 cb_hua_rs.set_label(label="$\\rho_v$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs_small)
 cb_hua_rs.ax.tick_params(labelsize=fs_dwarf)
 
-cb_hua_hat = fig1.colorbar(mappable=rho_v_hat_curtain, ax=ax_hua_hat, use_gridspec=False,
-							extend='max', orientation='vertical', fraction=0.095, pad=0)
+cb_hua_hat = fig1.colorbar(mappable=rho_v_hat_curtain, ax=ax_hua_hat, use_gridspec=True,
+							extend='max', orientation='vertical', fraction=0.09, pad=0.01, shrink=0.9)
 cb_hua_hat.set_label(label="$\\rho_v$ ($\mathrm{g}\,\mathrm{m}^{-3}$)", fontsize=fs_small)
 cb_hua_hat.ax.tick_params(labelsize=fs_dwarf)
 
-cb_ta_rs = fig1.colorbar(mappable=temp_rs_curtain, ax=ax_ta_rs, use_gridspec=False,
-							extend='max', orientation='vertical', fraction=0.095, pad=0)
+cb_ta_rs = fig1.colorbar(mappable=temp_rs_curtain, ax=ax_ta_rs, use_gridspec=True,
+							extend='max', orientation='vertical', fraction=0.09, pad=0.01, shrink=0.9)
 cb_ta_rs.set_label(label="T (K)", fontsize=fs_small)
 cb_ta_rs.ax.tick_params(labelsize=fs_dwarf)
 
-cb_ta_hat = fig1.colorbar(mappable=temp_hat_curtain, ax=ax_ta_hat, use_gridspec=False,
-							extend='max', orientation='vertical', fraction=0.095, pad=0)
+cb_ta_hat = fig1.colorbar(mappable=temp_hat_curtain, ax=ax_ta_hat, use_gridspec=True,
+							extend='max', orientation='vertical', fraction=0.09, pad=0.01, shrink=0.9)
 cb_ta_hat.set_label(label="T (K)", fontsize=fs_small)
 cb_ta_hat.ax.tick_params(labelsize=fs_dwarf)
 
-cb_ta_bl_hat = fig1.colorbar(mappable=temp_hat_bl_curtain, ax=ax_ta_bl_hat, use_gridspec=False,
-							extend='max', orientation='vertical', fraction=0.095, pad=0)
+cb_ta_bl_hat = fig1.colorbar(mappable=temp_hat_bl_curtain, ax=ax_ta_bl_hat, use_gridspec=True,
+							extend='max', orientation='vertical', fraction=0.09, pad=0.01, shrink=0.9)
 cb_ta_bl_hat.set_label(label="T (K)", fontsize=fs_small)
 cb_ta_bl_hat.ax.tick_params(labelsize=fs_dwarf)
 
@@ -474,16 +476,16 @@ plt.subplots_adjust(hspace=0.0)			# removes space between subplots
 # Adjust axis width and position:
 ax_iwv_pos = ax_iwv.get_position().bounds
 ax_iwv.set_position([ax_iwv_pos[0], ax_iwv_pos[1], ax_iwv_pos[2]*0.9, ax_iwv_pos[3]])
-ax_hua_rs_pos = ax_hua_rs.get_position().bounds
-ax_hua_rs.set_position([ax_hua_rs_pos[0], ax_hua_rs_pos[1], ax_hua_rs_pos[2]*0.9, ax_hua_rs_pos[3]])
-ax_hua_hat_pos = ax_hua_hat.get_position().bounds
-ax_hua_hat.set_position([ax_hua_hat_pos[0], ax_hua_hat_pos[1], ax_hua_hat_pos[2]*0.9, ax_hua_hat_pos[3]])
-ax_ta_rs_pos = ax_ta_rs.get_position().bounds
-ax_ta_rs.set_position([ax_ta_rs_pos[0], ax_ta_rs_pos[1], ax_ta_rs_pos[2]*0.9, ax_ta_rs_pos[3]])
-ax_ta_hat_pos = ax_ta_hat.get_position().bounds
-ax_ta_hat.set_position([ax_ta_hat_pos[0], ax_ta_hat_pos[1], ax_ta_hat_pos[2]*0.9, ax_ta_hat_pos[3]])
-ax_ta_bl_hat_pos = ax_ta_bl_hat.get_position().bounds
-ax_ta_bl_hat.set_position([ax_ta_bl_hat_pos[0], ax_ta_bl_hat_pos[1], ax_ta_bl_hat_pos[2]*0.9, ax_ta_bl_hat_pos[3]])
+# ax_hua_rs_pos = ax_hua_rs.get_position().bounds
+# ax_hua_rs.set_position([ax_hua_rs_pos[0], ax_hua_rs_pos[1], ax_hua_rs_pos[2]*0.9, ax_hua_rs_pos[3]])
+# ax_hua_hat_pos = ax_hua_hat.get_position().bounds
+# ax_hua_hat.set_position([ax_hua_hat_pos[0], ax_hua_hat_pos[1], ax_hua_hat_pos[2]*0.9, ax_hua_hat_pos[3]])
+# ax_ta_rs_pos = ax_ta_rs.get_position().bounds
+# ax_ta_rs.set_position([ax_ta_rs_pos[0], ax_ta_rs_pos[1], ax_ta_rs_pos[2]*0.9, ax_ta_rs_pos[3]])
+# ax_ta_hat_pos = ax_ta_hat.get_position().bounds
+# ax_ta_hat.set_position([ax_ta_hat_pos[0], ax_ta_hat_pos[1], ax_ta_hat_pos[2]*0.9, ax_ta_hat_pos[3]])
+# ax_ta_bl_hat_pos = ax_ta_bl_hat.get_position().bounds
+# ax_ta_bl_hat.set_position([ax_ta_bl_hat_pos[0], ax_ta_bl_hat_pos[1], ax_ta_bl_hat_pos[2]*0.9, ax_ta_bl_hat_pos[3]])
 
 
 if save_figures:
@@ -493,7 +495,7 @@ elif save_figures_eps:
 else:
 	plt.show()
 
-print(f"Plot saved to {path_plots + 'MOSAiC_moist_air_intrusion_overview_hatpro_mirac-p_sonde.png'}.")
+print(f"Plot saved to {path_plots + 'MOSAiC_moist_air_intrusion_overview_hatpro_mirac-p_sonde.png/pdf'}.")
 HATPRO_DS_prw.close()
 HATPRO_DS_hua.close()
 HATPRO_DS_ta.close()
