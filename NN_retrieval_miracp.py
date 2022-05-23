@@ -9,7 +9,7 @@ import gc
 import os
 import sys
 from matplotlib.ticker import PercentFormatter
-from import_data import import_mirac_MET_RPG_daterange, import_PS_mastertrack, import_mirac_level1b_daterange, import_mirac_level1b_daterange_pangaea
+from import_data import import_PS_mastertrack, import_mirac_level1b_daterange_pangaea
 from my_classes import radiosondes, radiometers, era_i
 from data_tools import compute_retrieval_statistics, compute_DOY, select_MWR_channels, datetime_to_epochtime
 
