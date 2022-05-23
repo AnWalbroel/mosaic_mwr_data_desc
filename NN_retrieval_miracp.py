@@ -9,7 +9,7 @@ import gc
 import os
 import sys
 from matplotlib.ticker import PercentFormatter
-from import_data import import_mirac_MET_RPG_daterange, import_PS_mastertrack, import_mirac_level1b_daterange
+from import_data import import_mirac_MET_RPG_daterange, import_PS_mastertrack, import_mirac_level1b_daterange, import_mirac_level1b_daterange_pangaea
 from my_classes import radiosondes, radiometers, era_i
 from data_tools import compute_retrieval_statistics, compute_DOY, select_MWR_channels, datetime_to_epochtime
 
@@ -276,7 +276,7 @@ def save_obs_predictions(
 											'comment': "ambient relative humidity measured by sensor on microwave radiometer",
 											'valid_min': np.array([0.]).astype(np.float32)[0],
 											'valid_max': np.array([1.1]).astype(np.float32)[0]}),
-							'flag':			(['time'], mwr_dict['flag'][time_idx].astype(np.short) - 16,			# - 16 because MWR_PRO processing not made for MiRAC-P
+							'flag':			(['time'], mwr_dict['flag'][time_idx].astype(np.short) - np.median(mwr_dict['flag']).astype(np.short),			# if version less than v01, computation -16 required
 											{'long_name': "quality control flags",
 											'flag_masks': np.array([1,2,4,8,16,32,64,128,256,512], dtype=np.short),
 											'flag_meanings': ("visual_inspection_filter_band_1 visual_inspection_filter_band2 visual_inspection_filter_band3 " +
@@ -367,7 +367,7 @@ def save_obs_predictions(
 												'long_name': "atmosphere_mass_content_of_water_vapor offset correction based on brightness temperature offset",
 												'comment': ("This value has been subtracted from the original prw value to account for instrument " +
 															"calibration drifts. The information is designated for expert user use.")}),
-								'flag':			(['time'], mwr_dict['flag'][time_idx].astype(np.short) - 16,			# - 16 because MWR_PRO processing not made for MiRAC-P
+								'flag':			(['time'], mwr_dict['flag'][time_idx].astype(np.short) - np.median(mwr_dict['flag']).astype(np.short),			# if version < v01: - 16 because MWR_PRO processing not made for MiRAC-P
 												{'long_name': "quality control flags",
 												'flag_masks': np.array([1,2,4,8,16,32,64,128,256,512,1024], dtype=np.short),
 												'flag_meanings': ("visual_inspection_filter_band_1 visual_inspection_filter_band2 visual_inspection_filter_band3 " +
@@ -429,7 +429,7 @@ def save_obs_predictions(
 				DS.attrs['training_data_years'] = "2001, 2002, 2004, 2006, 2007, 2008, 2009, 2011, 2012, 2013, 2015, 2017"
 
 				if aux_info['nya_test_data']:
-					DS.attrs['test_data'] = "Ny Alesund radiosondes 2006-2017"
+					DS.attrs['test_data'] = "Ny-Alesund radiosondes 2006-2017"
 				else:
 					DS.attrs['test_data'] = "ERA-Interim"
 					DS.attrs['test_data_years'] = "2003, 2005, 2010, 2014, 2016"
@@ -968,11 +968,11 @@ n_yrs = len(yrs)
 n_training = round(0.7*n_yrs)			# number of training years; default: 0.7
 n_test = n_yrs - n_training
 
-path_output = "/data/obs/campaigns/mosaic/mirac-p/"										# path where output is saved to
+path_output = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/outside_eez/MiRAC-P_l1_test/"			# path where output is saved to
 path_data = {'nya': "/net/blanc/awalbroe/Data/mir_fwd_sim/new_rt_nya/",
 			'pol': "/net/blanc/awalbroe/Data/MOSAiC_radiometers/retrieval_training/mirac-p/"}		# path of training/test data
 path_data = path_data[site]
-path_mirac_level1 = "/data/obs/campaigns/mosaic/mirac-p/l1/"							# path of mirac-p tb data
+path_mirac_level1 = "/net/blanc/awalbroe/Data/MOSAiC_radiometers/MiRAC-P_l1_v01/"					# path of mirac-p tb data
 
 aux_info['add_TB_noise'] = True				# if True, random noise will be added to training and test data. 
 											# Remember to define a noise dictionary if True
@@ -1023,7 +1023,7 @@ if aux_info['nya_test_data']:
 
 if sys.argv[1] == 'finalized':
 	# Load observed MiRAC-P data:
-	mwr_dict = import_mirac_level1b_daterange(path_mirac_level1, aux_info['date_start'], aux_info['date_end'], vers='v00', verbose=1)
+	mwr_dict = import_mirac_level1b_daterange_pangaea(path_mirac_level1, aux_info['date_start'], aux_info['date_end'])
 
 	mwr_dict['flag'] = mwr_dict['flag'].astype(np.short)
 	mwr_dict['time'] = mwr_dict['time'].astype(np.float64)
@@ -1035,28 +1035,7 @@ if sys.argv[1] == 'finalized':
 
 
 	if 'pres_sfc' in aux_info['predictors']:
-		mwr_dict_add = import_mirac_MET_RPG_daterange(path_mirac_level1, aux_info['date_start'], aux_info['date_end'], verbose=1)
-		mwr_dict_add['time'] = mwr_dict_add['time'].astype(np.int64)
-		mir_add_time = np.arange(mwr_dict_add['time'][0], mwr_dict_add['time'][-1]+1)
-
-		# interpolate on working time grid:
-		mwr_dict_add['pres'] = np.interp(mir_add_time, mwr_dict_add['time'], mwr_dict_add['pres'])
-
-		# unfortunately, .MET and .BRT files are not on the same time axis. Therefore, resampling is required:
-		mwr_dict['pres'] = np.full((aux_info['n_obs'],1), -9999.0)
-		sii = 0
-		for iii, mwrt in enumerate(mwr_dict['time']): 
-			idi = np.where(mwr_dict_add['time'][sii:sii+1500] == mwrt)[0]
-			if idi.size > 0:
-				sii = idi[0] + sii
-				mwr_dict['pres'][iii,0] = mwr_dict_add['pres'][sii]
-
-		# repair missing values:
-		pres_fail_idx = np.where(mwr_dict['pres'] < 0)[0]
-		assert np.all(np.diff(pres_fail_idx) > 1)		# then lin. interpolation with width=1 can be used
-		for iii in pres_fail_idx:
-			mwr_dict['pres'][iii,0] = 0.5*(mwr_dict['pres'][iii-1,0] + mwr_dict['pres'][iii+1,0])
-
+		mwr_dict['pres'] = mwr_dict['pa']
 		# into input vector:
 		mwr_dict['input'] = np.concatenate((mwr_dict['input'], mwr_dict['pres']), axis=1)
 
@@ -1431,4 +1410,5 @@ elif sys.argv[1] == '20_runs':
 
 
 print("Done....")
+datetime_utc = dt.datetime.utcnow()
 print(datetime_utc - ssstart)
