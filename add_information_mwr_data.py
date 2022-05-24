@@ -72,8 +72,8 @@ def modify_nc(
 		# - global attributes: time_start, time_end
 		# DS.attrs['time_start'] = str(DS.time.values[0])
 		# DS.attrs['time_end'] = str(DS.time.values[-1])
-		DS.attrs['time_start'] = dt.datetime.utcfromtimestamp(DS.time.values[0]).strftime("%Y-%m-%d %H:%M:%S") + " UTC"
-		DS.attrs['time_end'] = dt.datetime.utcfromtimestamp(DS.time.values[-1]).strftime("%Y-%m-%d %H:%M:%S") + " UTC"
+		DS.attrs['time_start'] = dt.datetime.utcfromtimestamp(DS.time.values[0]).strftime("%Y-%m-%d %H:%M:%SZ")
+		DS.attrs['time_end'] = dt.datetime.utcfromtimestamp(DS.time.values[-1]).strftime("%Y-%m-%d %H:%M:%SZ")
 
 		"""
 		# add housekeeping data if available:
