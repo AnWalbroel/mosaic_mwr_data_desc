@@ -1,0 +1,3 @@
+!path='/home/hatpro/reprocess/mwr_pro/source:/opt/itt/idl8.2/idl82/lib'
+pl_mk, date='140508',mwr_meas='ufs',mwr_dir='/data/data_hatpro/ufs',home_path='/home/hatpro/reprocess'
+exit

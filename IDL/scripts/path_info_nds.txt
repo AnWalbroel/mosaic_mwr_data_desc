@@ -1,0 +1,4 @@
+/data/obs/site
+/usr/local/bin/idl
+/home/hatpro/mwr_pro_mosaic
+/home/hatpro/public_html
